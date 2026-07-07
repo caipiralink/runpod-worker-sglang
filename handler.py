@@ -48,10 +48,12 @@ async def async_handler(job):
             for formated_chunk in process_response(response):
                 yield formated_chunk
         else:
-            for chunk in response.iter_lines():
-                if chunk:
-                    decoded_chunk = chunk.decode("utf-8")
-                    yield decoded_chunk
+            # Yield a dict, not a string: the RunPod edge JSON-serializes the
+            # yielded value, so a string comes out double-encoded.
+            try:
+                yield response.json()
+            except ValueError:
+                yield response.text
 
     # Case 2: payload looks like OpenAI chat/completions but omits the wrapper.
     elif "messages" in job_input:
@@ -68,9 +70,10 @@ async def async_handler(job):
             for formated_chunk in process_response(response):
                 yield formated_chunk
         else:
-            for chunk in response.iter_lines():
-                if chunk:
-                    yield chunk.decode("utf-8")
+            try:
+                yield response.json()
+            except ValueError:
+                yield response.text
 
     # Case 3: assume user meant the native /generate endpoint.
     else:
