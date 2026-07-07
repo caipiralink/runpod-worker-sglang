@@ -38,9 +38,13 @@ async def async_handler(job):
         openai_url = f"{engine.base_url}" + openai_route
         headers = {"Content-Type": "application/json"}
 
-        response = requests.post(openai_url, headers=headers, json=openai_input)
+        # GET-only routes: sglang rejects POST with 405
+        if openai_route in ("/v1/models", "/models"):
+            response = requests.get(openai_url, headers=headers)
+        else:
+            response = requests.post(openai_url, headers=headers, json=openai_input)
         # Process the streamed response
-        if openai_input.get("stream", False):
+        if openai_input and openai_input.get("stream", False):
             for formated_chunk in process_response(response):
                 yield formated_chunk
         else:
