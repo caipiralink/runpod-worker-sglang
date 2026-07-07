@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system --break-system-packages -r requirements.txt
 
 # copy source files
-COPY handler.py engine.py utils.py download_model.py launch_override.py test_input.json ./
+COPY handler.py engine.py utils.py download_model.py launch_override.py lb.py test_input.json ./
 COPY public/ ./public/
 
 # Setup for Option 2: Building the Image with the Model included
