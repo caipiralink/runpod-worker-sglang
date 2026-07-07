@@ -63,7 +63,7 @@ class SGlangEngine:
             "TOOL_CALL_PARSER": "--tool-call-parser",
             "REASONING_PARSER": "--reasoning-parser",
             "KV_CACHE_DTYPE": "--kv-cache-dtype",
-            "CUDA_GRAPH_MAX_BS": "--cuda-graph-max-bs",
+            "CUDA_GRAPH_MAX_BS_DECODE": "--cuda-graph-max-bs-decode",
         }
 
         # Boolean flags
