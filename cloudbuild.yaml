@@ -1,0 +1,21 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
+    args:
+      - build
+      - --tag
+      - us-docker.pkg.dev/$PROJECT_ID/runpod/worker-sglang:${_TAG}
+      - .
+
+images:
+  - us-docker.pkg.dev/$PROJECT_ID/runpod/worker-sglang:${_TAG}
+
+substitutions:
+  _TAG: v0.5.14-cu130
+
+options:
+  machineType: E2_HIGHCPU_8
+  diskSizeGb: 300
+
+timeout: 7200s
