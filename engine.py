@@ -1,3 +1,4 @@
+import shlex
 import subprocess
 import time
 import requests
@@ -23,8 +24,7 @@ class SGlangEngine:
     def start_server(self):
         command = [
             "python3",
-            "-m",
-            "sglang.launch_server",
+            "launch_override.py",
             "--host",
             self.host,
             "--port",
@@ -62,6 +62,8 @@ class SGlangEngine:
             "SAMPLING_BACKEND": "--sampling-backend",
             "TOOL_CALL_PARSER": "--tool-call-parser",
             "REASONING_PARSER": "--reasoning-parser",
+            "KV_CACHE_DTYPE": "--kv-cache-dtype",
+            "CUDA_GRAPH_MAX_BS": "--cuda-graph-max-bs",
         }
 
         # Boolean flags
@@ -89,6 +91,11 @@ class SGlangEngine:
         for flag in boolean_flags:
             if os.getenv(flag, "").lower() in ("true", "1", "yes"):
                 command.append(f"--{flag.lower().replace('_', '-')}")
+
+        # Escape hatch for launch_server flags without a dedicated env var
+        extra_args = os.getenv("EXTRA_ARGS")
+        if extra_args:
+            command.extend(shlex.split(extra_args))
 
         self.process = subprocess.Popen(command, stdout=None, stderr=None)
         print(f"Server started with PID: {self.process.pid}")
