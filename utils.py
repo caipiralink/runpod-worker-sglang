@@ -1,26 +1,27 @@
-import json
+import time
 
 
-def format_chunk(chunk):
-    chunk = chunk.strip()
-    if chunk.startswith('data: '):
-        chunk = chunk[6:]  # Remove 'data: ' prefix
-    
-    if chunk == '[DONE]':
-        return f"data: {chunk}\n\n"
-    
-    try:
-        # Try to parse as JSON
-        data = json.loads(chunk)
-        formatted_json = json.dumps(data, indent=4)
-        formatted_lines = [f"data: {line}" for line in formatted_json.split('\n')]
-        return '\n'.join(formatted_lines) + '\n\n'
-    except json.JSONDecodeError:
-        # If it's not valid JSON, return as plain text
-        return f"data: {chunk}\n\n"
-    
-def process_response(response):
+def process_response(response, flush_interval=0.1):
+    """Relay an SSE response as batched chunks.
+
+    Each yield becomes one RunPod stream update, and those updates are
+    rate-limited to a few per second. Yielding per SSE event caps client
+    throughput at that update rate, so events are passed through verbatim
+    and flushed together on a time window instead.
+    """
+    buffer = []
+    last_flush = time.monotonic()
     for line in response.iter_lines():
-        if line:
-            decoded_line = line.decode('utf-8')
-            yield format_chunk(decoded_line)
+        if not line:
+            continue
+        decoded = line.decode("utf-8").strip()
+        if not decoded.startswith("data:"):
+            decoded = f"data: {decoded}"
+        buffer.append(decoded + "\n\n")
+        now = time.monotonic()
+        if now - last_flush >= flush_interval:
+            yield "".join(buffer)
+            buffer = []
+            last_flush = now
+    if buffer:
+        yield "".join(buffer)
